@@ -1,18 +1,13 @@
-import os
 from dotenv import load_dotenv
-from fritzconnection.lib.fritzhosts import FritzHosts
+from src.fritzbox import FritzBox
 
 # Get the Environment Variables
 load_dotenv()
-fritzBoxIP = 'FB_IP'
-fritzBoxUser = 'USER'
-fritzBoxPWD = 'PASSWORD'
 
-fh = FritzHosts(address=os.getenv(fritzBoxIP),
-                user=os.getenv(fritzBoxUser),
-                password=os.getenv(fritzBoxPWD))
 
-hosts = fh.get_hosts_info()
+fb = FritzBox()
+hosts = fb.get_hosts()
+
 for index, host in enumerate(hosts, start=1):
     status = 'active' if host['status'] else '-'
     ip = host['ip'] if host['ip'] else '-'
