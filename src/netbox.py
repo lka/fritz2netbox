@@ -32,7 +32,7 @@ class NetBox():
             'Authorization': 'Token ' + self.token
         }
 
-    def get_json(self, api: str, payload: str = "") -> json:
+    def get_json(self, api: str, payload: str = "") -> requests.Response:
         """GET json from api
 
         Args:
@@ -45,9 +45,19 @@ class NetBox():
         """
         url = self.get_url_base()+api
         headers = self.get_headers()
-        response = requests.request("GET", url, headers=headers,
-                                    data=payload)
-        return json.loads(response.text)
+        return requests.request("GET",
+                                url,
+                                headers=headers,
+                                data=payload)
+
+    def get_ip_adresses(self) -> requests.Response:
+        """get IP-Adresslist from netbox
+
+        Returns:
+            requests.Response: html response
+        """
+        api = '/api/ipam/ip-addresses/'
+        return self.get_json(api)
 
     def create_ip_address(self, ip: str, dns_name: str, tenant_id: int = 1)\
             -> requests.Response:
@@ -91,4 +101,28 @@ class NetBox():
         payload = ""
 
         return requests.request("DELETE", url, headers=headers,
+                                data=payload)
+
+    def modify_ip_address(self, id: str, ip: str, dns_name: str)\
+            -> requests.Response:
+        """Modify desired IP Address with ID to given ip and dns_name
+
+        Args:
+            id (str): the ID to be modified
+            ip (str): the IP to be set
+            dns_name (str): the DNS-Name to be set
+
+        Returns:
+            requests.Response: http-Response
+        """
+        url = self.get_url_base()+f"/api/ipam/ip-addresses/{id}/"
+        headers = self.get_headers()
+        payload = json.dumps(
+            {
+                "address": f"{ip}/24" if len(ip.split('/')) == 1 else ip,
+                "dns_name": dns_name
+            }
+        )
+
+        return requests.request("PATCH", url, headers=headers,
                                 data=payload)
