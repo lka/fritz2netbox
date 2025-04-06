@@ -6,6 +6,7 @@ from src.netbox import NetBox
 from dotenv import load_dotenv
 import json
 from ipaddress import IPv4Network
+from packaging.version import Version
 import random
 
 
@@ -29,7 +30,15 @@ class TestNetBoxAccess(TestCase):
         retval = next(hosts_iterator)
         return format(retval) + "/" + ip.rsplit("/")[1]
 
-    def get_next_free_ipv4(self, hosts: list) -> None:
+    def get_next_free_ipv4(self, hosts: list) -> str:
+        """filter ip address list for next free address
+
+        Args:
+            hosts (list): given ip address list
+
+        Returns:
+            str: next free ip address
+        """
         v4addresse_objects = list(
             filter(lambda x: x["family"]["value"] == 4, hosts["results"])
         )
@@ -37,9 +46,19 @@ class TestNetBoxAccess(TestCase):
         reserved = list(map(lambda x: x.split("/")[0], v4addresses))
         return self.get_next_ipv4(v4addresses[0], reserved)
 
+    def test_get_status(self):
+        """Test the status of netbox"""
+        resp = self.nb.get_status()
+        self.assertEqual(resp.status_code, 200, "should be reachable")
+        content = json.loads(resp.text)
+        version = Version(content["netbox-version"])
+        self.assertGreaterEqual(
+            version, Version("4.2.6"), "Netbox Version should be greater or equal to 4.2.6"
+        )
+
     def test_get_json(self):
         """Test the access of Netbox"""
-        api = "/api/ipam/ip-addresses/"
+        api = "/api/ipam/ip-addresses/?brief=1"
         adresses = self.nb.get_json(api)
         # print(json.dumps(json.loads(adresses.text), indent=4))
         self.assertEqual(adresses.status_code, 200, "should return Status Code OK")
@@ -48,7 +67,7 @@ class TestNetBoxAccess(TestCase):
             adresses["count"], 1, "At least 1 IP-adress should be assigned."
         )
 
-    def test_create_ip_address(self):
+    def test_create__and_delete__ip_address(self):
         """Test create one IP Address and delete it"""
         if self.adresses.status_code != 200:
             self.fail("Can't get IP-Adresses")
@@ -89,3 +108,22 @@ class TestNetBoxAccess(TestCase):
         # print(res.status_code)
         # print(json.dumps(res.text, indent=4))
         self.assertEqual(res.status_code, 200, "should be modified")
+
+    def test_get_mac_adresses(self):
+        """test get mac addresses from netbox"""
+        resp = self.nb.get_mac_adresses(5)
+        self.assertEqual(resp.status_code, 200, "should be OK")
+        print(json.dumps(json.loads(resp.text), indent=4))
+        count = json.loads(resp.text)["count"]
+        self.assertGreater(count, 0, "should have at least 1 MAC address")
+
+    def test_create__and_delete__mac_address(self):
+        """test creation of one mac address and delete it again
+        """
+        mac = "00:80:41:ae:fd:7e"
+        resp = self.nb.create_mac_address_if_it_doesnt_exist(mac)
+        self.assertIn(resp.status_code, [200, 201], "should be created")
+        id = json.loads(resp.text)["id"]
+        # print(json.dumps(json.loads(resp.text), indent=4))
+        resp = self.nb.delete_mac_address(int(id))
+        self.assertEqual(resp.status_code, 204, "should be deleted")

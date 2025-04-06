@@ -18,7 +18,22 @@ class FritzBox:
     def get_hosts(self):
         return self.fh.get_hosts_info()
 
-    def get_active_hosts(self, hosts: list[dict], ignore_list: list = []) -> list[dict]:
+    def hostnames_has_duplicates(self, hosts: list[dict]) -> bool:
+        """check whether all hostnames are bijective
+
+        Args:
+            hosts (list[dict]): list of hosts
+
+        Returns:
+            bool: true if hosts has duplicates
+        """
+        hostnames = list(map(lambda x: x['name'], hosts))
+        n = max(set(hostnames), key=hostnames.count)
+        return hostnames.count(n) > 1
+
+    def get_active_hosts(
+        self, hosts: list[dict], ignore_list: list = [], accept_list: list = []
+    ) -> list[dict]:
         """get active hosts which are not in ignore_list
 
         Args:
@@ -33,9 +48,10 @@ class FritzBox:
             return []
         return list(
             filter(
-                lambda x: x["status"]
-                and len(x["ip"]) > 0
-                and x["ip"] not in ignore_list,
+                lambda x: (
+                    x["status"] and len(x["ip"]) > 0 and x["ip"] not in ignore_list
+                )
+                or x["ip"] in accept_list,
                 hosts,
             )
         )
@@ -62,4 +78,4 @@ class FritzBox:
         Returns:
             list: only v4 hosts
         """
-        return list(filter(lambda x: len(x['ip'].split('.')) == 4, hosts))
+        return list(filter(lambda x: len(x["ip"].split(".")) == 4, hosts))
