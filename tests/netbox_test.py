@@ -113,7 +113,7 @@ class TestNetBoxAccess(TestCase):
         """test get mac addresses from netbox"""
         resp = self.nb.get_mac_adresses(5)
         self.assertEqual(resp.status_code, 200, "should be OK")
-        print(json.dumps(json.loads(resp.text), indent=4))
+        # print(json.dumps(json.loads(resp.text), indent=4))
         count = json.loads(resp.text)["count"]
         self.assertGreater(count, 0, "should have at least 1 MAC address")
 
