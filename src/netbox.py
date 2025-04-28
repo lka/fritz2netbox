@@ -209,8 +209,8 @@ class NetBox:
         """
         url = self.get_url_base() + f"/api/dcim/interfaces/{id}/"
         headers = self.get_headers()
-        payload = json.dumps({"pimary_mac_address": {"id": f"{macID}"}})
-        print(f"PATCH {url} -> {payload}")
+        payload = json.dumps({"primary_mac_address": {"id": macID}})
+        # print(f"PATCH {url} -> {payload}")
         #        resp = requests.request("PATCH", url, headers=headers, data=payload)
         resp = self.client.patch(
             url, headers=headers, data=payload, cookies=self.cookies
