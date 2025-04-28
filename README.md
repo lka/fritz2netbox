@@ -12,6 +12,6 @@ IP-addresses that should be ignored and not included in Netbox are in the IGNORE
 After this (in the next run) the program assigns corresponding MAC-addresses to the interfaces.
 It tries to set the MAC-address as primary_mac_address but there is a bug in Netbox (I have created an issue for the netbox team) it will work after the correction of this.
 
-For speed it up, I put the Fritz!Box data (the TR69 read is very slow) in 'hosts.json'. If you want to get changes from Fritz!Box delete the file 'hosts.json'.
+For speed it up, I put the Fritz!Box data (the TR-064 read is very slow) in 'hosts.json'. If you want to get changes from Fritz!Box delete the file 'hosts.json'.
 
 Errors are logged in 'fritz2netbox.log'.
